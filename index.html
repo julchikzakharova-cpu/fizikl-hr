@@ -1,4 +1,4 @@
- <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="ru">
 <head>
 <meta charset="UTF-8">
@@ -116,7 +116,7 @@ input, select, textarea { font-family: inherit; outline: none; }
 </style>
 </head>
 <body>
-
+ 
 <div id="loginScreen" class="login-wrap">
   <div class="login-logo">🏆</div>
   <div class="login-title">HR Физы</div>
@@ -125,7 +125,7 @@ input, select, textarea { font-family: inherit; outline: none; }
   <button class="btn-primary" onclick="doLogin()">Войти</button>
   <div class="login-err" id="loginErr"></div>
 </div>
-
+ 
 <div id="mainApp" class="app" style="display:none">
   <div class="header">
     <div class="header-top">
@@ -135,24 +135,24 @@ input, select, textarea { font-family: inherit; outline: none; }
     <div class="header-balance" id="headerBalance">—</div>
     <div class="header-label">физов на счёте</div>
   </div>
-
+ 
   <div class="screen active" id="screenHome">
     <div class="section" style="padding-top:16px">
       <div class="section-title">Последние операции</div>
       <div class="card" id="txList"><div class="loading"><div class="spinner"></div></div></div>
     </div>
   </div>
-
+ 
   <div class="screen" id="screenShop">
     <div style="padding:16px 16px 0"><div class="section-title">Корпоративный магазин</div></div>
-    <div class="shop-grid" id="shopGrid"></div>
+    <div class="shop-grid" id="shopGrid"><div class="loading" style="grid-column:1/-1"><div class="spinner"></div></div></div>
   </div>
-
+ 
   <div class="screen" id="screenOrders">
     <div class="section" style="padding-top:16px"><div class="section-title">Мои заказы</div></div>
-    <div id="ordersList" style="margin-top:12px"></div>
+    <div id="ordersList" style="margin-top:12px"><div class="loading"><div class="spinner"></div></div></div>
   </div>
-
+ 
   <div class="screen" id="screenHR">
     <div class="section" style="padding-top:16px">
       <div class="section-title">HR Управление <span class="badge-hr">ADMIN</span></div>
@@ -231,7 +231,7 @@ input, select, textarea { font-family: inherit; outline: none; }
       </div>
     </div>
   </div>
-
+ 
   <nav class="bottom-nav">
     <button class="nav-item active" onclick="showScreen('Home',this)">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12L12 3L21 12V21H15V15H9V21H3V12Z"/></svg>
@@ -251,7 +251,7 @@ input, select, textarea { font-family: inherit; outline: none; }
     </button>
   </nav>
 </div>
-
+ 
 <div class="modal-overlay" id="buyModal">
   <div class="modal">
     <div class="modal-title" id="buyModalTitle"></div>
@@ -262,7 +262,7 @@ input, select, textarea { font-family: inherit; outline: none; }
     </div>
   </div>
 </div>
-
+ 
 <div class="modal-overlay" id="cancelModal">
   <div class="modal">
     <div class="modal-title">Отменить заказ?</div>
@@ -273,23 +273,24 @@ input, select, textarea { font-family: inherit; outline: none; }
     </div>
   </div>
 </div>
-
+ 
 <div class="toast" id="toast"></div>
-
+ 
 <script>
 const API_URL = 'https://script.google.com/macros/s/AKfycbz732jXJfLFwLeXLTAYF7urCt-kYn9npjuyFSTzqvwirf9fn6g3boptwFtwTXxxaec3/exec';
+ 
 let user = null, pendingBuy = null, pendingCancel = null;
-
+ 
 window.Telegram?.WebApp?.ready();
 const saved = localStorage.getItem('hrEmail');
 if (saved) autoLogin(saved);
-
+ 
 async function autoLogin(email) {
   const r = await api('login', {email});
   if (r.success) { user = r.employee; showApp(); }
   else localStorage.removeItem('hrEmail');
 }
-
+ 
 async function doLogin() {
   const email = document.getElementById('loginEmail').value.trim().toLowerCase();
   const err = document.getElementById('loginErr');
@@ -299,15 +300,15 @@ async function doLogin() {
   if (r.success) { user = r.employee; localStorage.setItem('hrEmail', email); showApp(); }
   else err.textContent = r.error || 'Доступ закрыт';
 }
-
+ 
 document.getElementById('loginEmail').addEventListener('keydown', e => { if (e.key==='Enter') doLogin(); });
-
+ 
 function doLogout() {
   localStorage.removeItem('hrEmail'); user = null;
   document.getElementById('loginScreen').style.display = 'flex';
   document.getElementById('mainApp').style.display = 'none';
 }
-
+ 
 function showApp() {
   document.getElementById('loginScreen').style.display = 'none';
   document.getElementById('mainApp').style.display = 'flex';
@@ -316,12 +317,12 @@ function showApp() {
   if (user.role === 'hr') document.getElementById('hrNavBtn').style.display = 'flex';
   loadHome();
 }
-
+ 
 function setbal(v) {
   user.balance = v;
   document.getElementById('headerBalance').textContent = Number(v).toLocaleString('ru');
 }
-
+ 
 function showScreen(name, btn) {
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
@@ -331,7 +332,7 @@ function showScreen(name, btn) {
   if (name==='Orders') loadOrders();
   if (name==='HR') { loadEmp(); loadHrProds(); loadFizySelect(); }
 }
-
+ 
 async function loadHome() {
   const el = document.getElementById('txList');
   el.innerHTML = '<div class="loading"><div class="spinner"></div></div>';
@@ -340,7 +341,7 @@ async function loadHome() {
   if (!txs.length) { el.innerHTML = '<div class="empty"><div class="empty-icon">📭</div><div>Операций пока нет</div></div>'; return; }
   el.innerHTML = txs.map(t => `<div class="tx-item"><div><div class="tx-desc">${t.desc}</div><div class="tx-date">${t.date}</div></div><div class="tx-amount ${t.amount>0?'tx-plus':'tx-minus'}">${t.amount>0?'+':''}${t.amount} ф</div></div>`).join('');
 }
-
+ 
 async function loadShop() {
   const grid = document.getElementById('shopGrid');
   grid.innerHTML = '<div class="loading" style="grid-column:1/-1"><div class="spinner"></div></div>';
@@ -350,7 +351,7 @@ async function loadShop() {
   const cols = ['#FFF3E0','#E8F5E9','#E3F2FD','#FCE4EC','#F3E5F5','#E0F7FA'];
   grid.innerHTML = prods.map((p,i) => `<div class="product-card"><div class="product-img" style="background:${cols[i%6]}">${p.emoji||'🎁'}</div><div class="product-body"><div class="product-name">${p.name}</div><div class="product-desc">${p.desc||''}</div><div class="product-footer"><div class="product-price">${p.price} ф</div><div class="product-stock">${p.stock>=99?'∞':p.stock+' шт'}</div></div>${p.stock>0?`<button class="btn-buy" onclick="openBuy('${p.id}',${p.price},'${p.name.replace(/'/g,"\\'")}')">Купить</button>`:'<div style="font-size:11px;color:var(--danger);text-align:center;margin-top:6px">Нет в наличии</div>'}</div></div>`).join('');
 }
-
+ 
 function openBuy(id, price, name) {
   pendingBuy = {id, price, name};
   document.getElementById('buyModalTitle').textContent = name;
@@ -360,36 +361,36 @@ function openBuy(id, price, name) {
   if (user.balance < price) document.getElementById('buyModalSub').textContent += '\n\n⚠️ Недостаточно физов';
   document.getElementById('buyModal').classList.add('open');
 }
-
+ 
 async function confirmBuy() {
   closeModal('buyModal');
   const r = await api('buyProduct', {email: user.email, productId: pendingBuy.id});
   if (r.success) { setbal(r.newBalance); loadHome(); loadShop(); toast(`Куплено: ${pendingBuy.name} ✓`); }
   else toast('Ошибка: ' + r.error);
 }
-
+ 
 async function loadOrders() {
   const el = document.getElementById('ordersList');
   el.innerHTML = '<div class="loading"><div class="spinner"></div></div>';
   const r = await api('getOrders', {email: user.email});
   const orders = r.orders || [];
   if (!orders.length) { el.innerHTML = '<div class="empty"><div class="empty-icon">📦</div><div>Заказов пока нет</div></div>'; return; }
-  el.innerHTML = orders.map(o => `<div class="order-card"><div class="order-top"><div class="order-name">${o.name}</div><div class="order-price">${o.price} ф</div></div><div class="order-date">${o.date}</div><span class="order-status ${o.status==='выполнен'||o.status==='done'?'status-done':o.status==='отменён'?'status-cancelled':'status-pending'}">${o.status==='выполнен'||o.status==='done'?'✓ Выдан':o.status==='отменён'?'✕ Отменён':'⏳ Ожидает'}</span>${o.status==='ожидает'?`<button class="btn-cancel-order" onclick="openCancel('${o.id}','${o.name.replace(/'/g,"\\'")}',${o.price})">Отменить заказ</button>`:''}</div>`).join('');
+  el.innerHTML = orders.map(o => `<div class="order-card"><div class="order-top"><div class="order-name">${o.name}</div><div class="order-price">${o.price} ф</div></div><div class="order-date">${o.date}</div><span class="order-status ${o.status==='done'?'status-done':o.status==='отменён'?'status-cancelled':'status-pending'}">${o.status==='done'||o.status==='выполнен'?'✓ Выдан':o.status==='отменён'?'✕ Отменён':'⏳ Ожидает'}</span>${o.status==='ожидает'?`<button class="btn-cancel-order" onclick="openCancel('${o.id}','${o.name.replace(/'/g,"\\'")}',${o.price})">Отменить заказ</button>`:''}</div>`).join('');
 }
-
+ 
 function openCancel(id, name, price) {
   pendingCancel = {id, name, price};
   document.getElementById('cancelModalSub').textContent = `Заказ «${name}» будет отменён, ${price} физов вернутся на счёт.`;
   document.getElementById('cancelModal').classList.add('open');
 }
-
+ 
 async function confirmCancel() {
   closeModal('cancelModal');
   const r = await api('cancelOrder', {orderId: pendingCancel.id, email: user.email});
   if (r.success) { setbal(r.newBalance); loadOrders(); loadHome(); toast(`Возврат ${pendingCancel.price} физов ✓`); }
   else toast('Ошибка: ' + r.error);
 }
-
+ 
 function hrTab(name, btn) {
   document.querySelectorAll('.hr-tab').forEach(t => t.classList.remove('active'));
   document.querySelectorAll('.hr-panel').forEach(p => p.classList.remove('active'));
@@ -399,7 +400,7 @@ function hrTab(name, btn) {
   if (name==='Products') loadHrProds();
   if (name==='Fizy') loadFizySelect();
 }
-
+ 
 async function loadEmp() {
   const el = document.getElementById('empList');
   el.innerHTML = '<div class="loading"><div class="spinner"></div></div>';
@@ -407,7 +408,7 @@ async function loadEmp() {
   const emps = r.employees || [];
   el.innerHTML = emps.map(e => `<div class="emp-row"><div class="emp-avatar">${e.name[0]}</div><div><div class="emp-name">${e.name}</div><div class="emp-email">${e.email}</div></div><div class="emp-balance">${e.balance} ф</div><button class="btn-danger-sm" onclick="delEmp('${e.email}','${e.name.replace(/'/g,"\\'")}')">Удалить</button></div>`).join('') || '<div style="color:var(--muted);text-align:center;padding:16px;font-size:14px">Нет сотрудников</div>';
 }
-
+ 
 async function addEmployee() {
   const name = document.getElementById('newEmpName').value.trim();
   const email = document.getElementById('newEmpEmail').value.trim().toLowerCase();
@@ -416,19 +417,19 @@ async function addEmployee() {
   if (r.success) { document.getElementById('newEmpName').value=''; document.getElementById('newEmpEmail').value=''; loadEmp(); loadFizySelect(); toast(`${name} добавлен ✓`); }
   else toast(r.error);
 }
-
+ 
 async function delEmp(email, name) {
   const r = await api('removeEmployee', {email});
   if (r.success) { loadEmp(); loadFizySelect(); toast(`${name}: доступ закрыт`); }
   else toast(r.error);
 }
-
+ 
 async function loadFizySelect() {
   const r = await api('getEmployees');
   const emps = r.employees || [];
   document.getElementById('fizyEmployee').innerHTML = emps.map(e => `<option value="${e.email}">${e.name}</option>`).join('');
 }
-
+ 
 async function addFizy() {
   const email = document.getElementById('fizyEmployee').value;
   const amount = parseInt(document.getElementById('fizyAmount').value);
@@ -438,7 +439,7 @@ async function addFizy() {
   if (r.success) { document.getElementById('fizyAmount').value=''; loadEmp(); if (email===user.email) setbal(r.newBalance); toast(`+${amount} физов начислено ✓`); }
   else toast(r.error);
 }
-
+ 
 async function loadHrProds() {
   const el = document.getElementById('hrProdList');
   el.innerHTML = '<div class="loading"><div class="spinner"></div></div>';
@@ -446,7 +447,7 @@ async function loadHrProds() {
   const prods = r.products || [];
   el.innerHTML = prods.map(p => `<div class="emp-row"><div style="font-size:24px">${p.emoji||'🎁'}</div><div style="flex:1;margin-left:8px"><div class="emp-name">${p.name}</div><div class="emp-email">${p.price} ф · ${p.stock>=99?'∞':p.stock+' шт'}</div></div><button class="btn-danger-sm" onclick="hideProduct('${p.id}','${p.name.replace(/'/g,"\\'")}')">Скрыть</button></div>`).join('') || '<div style="color:var(--muted);text-align:center;padding:16px;font-size:14px">Нет товаров</div>';
 }
-
+ 
 async function addProduct() {
   const name = document.getElementById('prodName').value.trim();
   const desc = document.getElementById('prodDesc').value.trim();
@@ -458,13 +459,13 @@ async function addProduct() {
   if (r.success) { ['prodName','prodDesc','prodPrice','prodStock','prodEmoji'].forEach(i=>document.getElementById(i).value=''); loadHrProds(); toast(`«${name}» добавлен ✓`); }
   else toast(r.error);
 }
-
+ 
 async function hideProduct(id, name) {
   const r = await api('removeProduct', {productId: id});
   if (r.success) { loadHrProds(); toast(`«${name}» скрыт`); }
   else toast(r.error);
 }
-
+ 
 async function downloadReport(type) {
   toast('Загружаем отчёт...');
   const r = await api('getReport', {type});
@@ -479,14 +480,15 @@ async function downloadReport(type) {
   a.download = fn; a.click();
   toast('Отчёт скачан ✓');
 }
-
+ 
 async function api(action, data={}) {
   try {
-    const r = await fetch(API_URL, {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({action,...data})});
+    const params = new URLSearchParams({action, ...Object.fromEntries(Object.entries(data).map(([k,v]) => [k, typeof v === 'object' ? JSON.stringify(v) : v]))});
+    const r = await fetch(API_URL + '?' + params.toString());
     return await r.json();
   } catch(e) { return {success:false, error:'Ошибка сети'}; }
 }
-
+ 
 function closeModal(id) { document.getElementById(id).classList.remove('open'); }
 function toast(msg) {
   const t = document.getElementById('toast');
